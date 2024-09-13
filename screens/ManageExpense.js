@@ -4,12 +4,15 @@ import IconButton from '../UI/IconButton';
 import { GlobalStyles } from '../constants/styles';
 import Button from '../UI/Button';
 import { ExpensesContext } from '../stores/expenses_context';
+import ExpenseForm from '../components/ManageExpense/ExpenseForm';
 
 function ManageExpense({ route, navigation }) {
   const expensesCtx = useContext(ExpensesContext);
 
   const expenseId = route.params?.expenseId;
   const isEditing = !!expenseId;
+  const selectedExpense = expensesCtx.expenses.find((expense) => expense.id === expenseId );
+
   useEffect(() => {
     navigation.setOptions({title: isEditing ? 'Edit Expense' : 'Add Expense'})
   }, [navigation, isEditing]);
@@ -21,31 +24,25 @@ function ManageExpense({ route, navigation }) {
   function cancelHandler(){
     navigation.goBack();
   }
-  function confirmHandler(){
+  function confirmHandler(expenseData){
     if(isEditing){
       expensesCtx.updateExpense(
         expenseId,  
-        {
-          description: 'Updated expense', 
-          amount: 420.99,
-          date: new Date('2024-9-24')
-        }
+        expenseData,
       );
     } else {
-      expensesCtx.addExpense({
-        description: 'Test', 
-        amount: 69.99,
-        date: new Date('2024-9-22')
-      });
+      expensesCtx.addExpense(expenseData);
     }
     navigation.goBack();
   }
   return (
     <View style={styles.container}>
-      <View style={styles.buttonsContainer}>
-        <Button style={styles.button} onPress={confirmHandler}>{isEditing ? 'Update' : 'Add'}</Button>
-        <Button style={styles.button} mode="flat" onPress={cancelHandler}>Cancel</Button>
-      </View>
+      <ExpenseForm
+        onCancel={cancelHandler}
+        onSubmit={confirmHandler}
+        submitButtonLabel={isEditing ? 'Update' : 'Add'}
+        onEditValues={selectedExpense}
+      />
       {isEditing&&(
         <View style={styles.deleteContainer}>
           <IconButton
@@ -73,15 +70,6 @@ const styles = StyleSheet.create({
     borderTopColor: GlobalStyles.colors.primary200,
     alignItems: 'center'
   },
-  buttonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  button: {
-    minWidth: 120,
-    marginHorizontal: 8
-  }
 });
 
 export default ManageExpense
